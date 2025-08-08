@@ -1,0 +1,98 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  title     String
+  content   String?
+  published Boolean  @default(false)
+  authorId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Core conversations table
+model WhatsappConversation {
+  id              String   @id @default(cuid())
+  session_id      String   @unique
+  phone_number    String
+  message_sid     String?  @unique
+  user_message    String
+  ai_response     String
+  agent           String   @default("lexi")
+  timestamp       DateTime @default(now())
+  response_time_ms Int?
+  success         Boolean  @default(true)
+  error_message   String?
+  business_name   String?
+  industry        String?
+  trial_status    String   @default("prospect") // prospect, trial, paid, expired
+  
+  @@map("whatsapp_conversations")
+}
+
+// Business trials tracking
+model BusinessTrial {
+  id               String   @id @default(cuid())
+  phone_number     String   @unique
+  business_name    String
+  industry         String?
+  contact_person   String?
+  trial_start      DateTime @default(now())
+  trial_end        DateTime
+  trial_status     String   @default("active") // active, expired, converted, cancelled
+  converted        Boolean  @default(false)
+  conversion_date  DateTime?
+  monthly_revenue  Float    @default(15000)
+  messages_exchanged Int     @default(0)
+  last_activity    DateTime @default(now())
+  
+  @@map("business_trials")
+}
+
+// Payment transactions
+model Payment {
+  id              String   @id @default(cuid())
+  phone_number    String
+  business_name   String
+  amount          Float
+  currency        String   @default("NGN")
+  payment_method  String?  // flutterwave, paystack, bank_transfer
+  transaction_id  String?  @unique
+  status          String   @default("pending") // pending, completed, failed, refunded
+  paid_at         DateTime?
+  expires_at      DateTime
+  
+  @@map("payments")
+}
+
+// System analytics
+model SystemMetric {
+  id           String   @id @default(cuid())
+  metric_name  String
+  metric_value Float
+  metric_data  String?  // JSON stored as string
+  recorded_at  DateTime @default(now())
+  
+  @@map("system_metrics")
+}
